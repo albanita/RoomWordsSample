@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -55,6 +56,32 @@ public class MainActivity extends AppCompatActivity {
                 adapter.setWords(words);
             }
         });
+
+        // Add the functionality to swipe items in the
+        // recycler view to delete that item
+        ItemTouchHelper helper = new ItemTouchHelper(
+                new ItemTouchHelper.SimpleCallback(0,
+                        ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+                    @Override
+                    public boolean onMove(RecyclerView recyclerView,
+                                          RecyclerView.ViewHolder viewHolder,
+                                          RecyclerView.ViewHolder target) {
+                        return false;
+                    }
+
+                    @Override
+                    public void onSwiped(RecyclerView.ViewHolder viewHolder,
+                                         int direction) {
+                        int position = viewHolder.getAdapterPosition();
+                        Word myWord = adapter.getWordAtPosition(position);
+                        Toast.makeText(MainActivity.this, "Deleting " +
+                                myWord.getWord(), Toast.LENGTH_LONG).show();
+
+                        // Delete the word
+                        mWordViewModel.deleteWord(myWord);
+                    }
+                });
+        helper.attachToRecyclerView(recyclerView);
     }
 
     @Override
@@ -62,21 +89,6 @@ public class MainActivity extends AppCompatActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -91,5 +103,16 @@ public class MainActivity extends AppCompatActivity {
                     R.string.empty_not_saved,
                     Toast.LENGTH_LONG).show();
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        int id = item.getItemId();
+        if(id == R.id.clear_data){
+            Toast.makeText(this, "Clearing the data...", Toast.LENGTH_SHORT).show();
+            mWordViewModel.deleteAll();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
